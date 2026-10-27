@@ -3,8 +3,27 @@
   "version": "1.0.0",
   "private": true,
   "description": "RepoMemory: Pull Request Change Impact Analysis & Architectural Memory Platform",
+  "type": "module",
+  "main": "backend/index.js",
   "scripts": {
-    "build": "npm --prefix backend install",
-    "start": "node backend/index.js"
+    "start": "node backend/index.js",
+    "build": "echo 'Build successful'",
+    "dev": "node backend/index.js"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.26.9",
+    "@babel/traverse": "^7.26.9",
+    "axios": "^1.7.9",
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.10.1",
+    "nodemon": "^3.1.9"
   }
 }

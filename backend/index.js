@@ -1,7 +1,14 @@
-import dotenv from "dotenv";
-dotenv.config({
-  path: "./.env",
-});
+// Safe dotenv configuration with cloud production fallback
+try {
+  const dotenv = await import("dotenv");
+  if (dotenv.default?.config) {
+    dotenv.default.config({ path: "./.env" });
+  } else if (dotenv.config) {
+    dotenv.config({ path: "./.env" });
+  }
+} catch {
+  // In cloud production (Render, Heroku), environment variables are injected into process.env
+}
 
 import dns from "dns";
 
