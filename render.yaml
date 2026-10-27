@@ -9,3 +9,13 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: ACCESS_TOKEN_SECRET
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRY
+        value: 15m
+      - key: REFRESH_TOKEN_SECRET
+        generateValue: true
+      - key: REFRESH_TOKEN_EXPIRY
+        value: 10d
+      - key: CORS_ORIGIN
+        value: https://repo-memory.vercel.app
