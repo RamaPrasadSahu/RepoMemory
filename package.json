@@ -4,11 +4,7 @@
   "private": true,
   "description": "RepoMemory: Pull Request Change Impact Analysis & Architectural Memory Platform",
   "scripts": {
-    "build": "npm run build --prefix backend",
-    "start": "npm start --prefix backend",
-    "build:frontend": "npm run build --prefix frontend",
-    "start:frontend": "npm run dev --prefix frontend",
-    "build:backend": "npm run build --prefix backend",
-    "start:backend": "npm start --prefix backend"
+    "build": "npm --prefix backend install",
+    "start": "node backend/index.js"
   }
 }
