@@ -36,15 +36,25 @@ app.use(
 );
 
 // 2. Strict Cross-Origin Resource Sharing (CORS)
-const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
+const defaultAllowedOrigins = [
+  "http://localhost:5173",
+  "https://repo-memory.vercel.app",
+];
+const envOrigins = (process.env.CORS_ORIGIN || "")
   .split(",")
-  .map((o) => o.trim());
+  .map((o) => o.trim())
+  .filter(Boolean);
+const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envOrigins]));
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow non-browser requests (tools, curl, server-to-server) or matched origins
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow non-browser requests or matched origins, including Vercel preview domains
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
         return callback(null, true);
       }
       return callback(null, false);
