@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "build": "echo 'No build step required for backend'"
+    "build": "npm install"
   },
   "dependencies": {
     "@babel/parser": "^7.26.9",

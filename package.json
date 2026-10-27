@@ -7,7 +7,7 @@
   "main": "backend/index.js",
   "scripts": {
     "start": "node backend/index.js",
-    "build": "echo 'Build successful'",
+    "build": "npm install && npm --prefix backend install",
     "dev": "node backend/index.js"
   },
   "dependencies": {
