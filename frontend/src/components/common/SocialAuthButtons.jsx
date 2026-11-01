@@ -38,33 +38,33 @@ const PRESET_ACCOUNTS = {
   google: [
     {
       name: 'Alex Rivera',
-      email: 'alex.rivera@techcorp.io',
-      role: 'Staff Infrastructure Engineer',
+      email: 'alex.rivera.dev@gmail.com',
+      role: 'Fullstack Developer',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop&crop=faces',
-      org: 'Google Workspace',
+      org: 'Personal Gmail',
     },
     {
       name: 'Sarah Chen',
-      email: 'sarah.chen@devops.cloud',
-      role: 'Principal Software Architect',
+      email: 'sarah.chen.codes@gmail.com',
+      role: 'Software Engineer',
       avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&h=120&fit=crop&crop=faces',
-      org: 'Google Cloud Identity',
+      org: 'Personal Gmail',
     },
   ],
   microsoft: [
     {
       name: 'Marcus Vance',
-      email: 'marcus.vance@enterprise.onmicrosoft.com',
+      email: 'marcus.vance@outlook.com',
       role: 'Lead Cloud Architect',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=faces',
-      org: 'Microsoft Entra ID',
+      org: 'Microsoft Account',
     },
     {
       name: 'Elena Rostova',
-      email: 'elena.rostova@azurecorp.net',
+      email: 'elena.rostova@live.com',
       role: 'Senior Systems Engineer',
       avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&h=120&fit=crop&crop=faces',
-      org: 'Azure Active Directory',
+      org: 'Microsoft Account',
     },
   ],
 };
@@ -127,12 +127,27 @@ export const SocialAuthButtons = ({
   const handleCustomSubmit = (e) => {
     e.preventDefault();
     if (!customEmail || !customEmail.includes('@')) {
-      setModalError('Please enter a valid work or corporate email.');
+      setModalError('Please enter a valid email address.');
       return;
     }
-    const derivedName = customName.trim() || customEmail.split('@')[0].replace(/[._-]/g, ' ');
+
+    const normalized = customEmail.toLowerCase().trim();
+
+    // Strict validation for personal Gmail accounts
+    if (
+      activeModalProvider === 'google' &&
+      !normalized.endsWith('@gmail.com') &&
+      !normalized.endsWith('@googlemail.com')
+    ) {
+      setModalError(
+        'Google login is restricted to personal Gmail accounts (@gmail.com). Work or enterprise domains are not permitted.'
+      );
+      return;
+    }
+
+    const derivedName = customName.trim() || normalized.split('@')[0].replace(/[._-]/g, ' ');
     executeAuth({
-      email: customEmail.trim(),
+      email: normalized,
       name: derivedName,
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&h=120&fit=crop&crop=faces',
       id: `${activeModalProvider}_${Date.now()}`,
@@ -148,7 +163,7 @@ export const SocialAuthButtons = ({
           className="flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-lg border border-slate-700/80 bg-slate-950/70 hover:bg-slate-800/80 hover:border-slate-600 text-xs font-medium text-slate-200 transition-all shadow-sm active:scale-[0.99] group"
         >
           <GoogleIcon className="w-4 h-4 group-hover:scale-105 transition-transform" />
-          <span>{isRegister ? 'Sign up with Google' : 'Google'}</span>
+          <span>{isRegister ? 'Sign up with Gmail' : 'Google (Gmail)'}</span>
         </button>
 
         <button
@@ -196,11 +211,11 @@ export const SocialAuthButtons = ({
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-slate-100">
-                    {activeModalProvider === 'google' ? 'Google Identity SSO' : 'Microsoft Entra SSO'}
+                    {activeModalProvider === 'google' ? 'Personal Google Account' : 'Microsoft Account'}
                   </h3>
                   <p className="text-[11px] text-slate-400 flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                    OAuth 2.0 PKCE Verified
+                    {activeModalProvider === 'google' ? 'Personal Gmail (@gmail.com)' : 'OAuth 2.0 PKCE Verified'}
                   </p>
                 </div>
               </div>
@@ -261,12 +276,14 @@ export const SocialAuthButtons = ({
                 ))}
               </div>
 
-              {/* Custom Work Account Entry */}
+              {/* Custom Personal Gmail / Microsoft Account Entry */}
               <div className="pt-2 border-t border-slate-800/80">
                 <form onSubmit={handleCustomSubmit} className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] font-medium text-slate-400">
-                      Or use your custom {activeModalProvider === 'google' ? 'Google' : 'Microsoft'} work email:
+                      {activeModalProvider === 'google'
+                        ? 'Or enter your personal Gmail address (@gmail.com):'
+                        : 'Or enter your Microsoft account email:'}
                     </label>
                   </div>
                   <div className="relative">
@@ -275,10 +292,19 @@ export const SocialAuthButtons = ({
                       type="email"
                       value={customEmail}
                       onChange={(e) => setCustomEmail(e.target.value)}
-                      placeholder={`engineer@${activeModalProvider === 'google' ? 'gmail.com' : 'outlook.com'}`}
+                      placeholder={
+                        activeModalProvider === 'google'
+                          ? 'developer.personal@gmail.com'
+                          : 'developer@outlook.com'
+                      }
                       className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-700/80 rounded-lg text-xs text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                     />
                   </div>
+                  {activeModalProvider === 'google' && (
+                    <p className="text-[10px] text-slate-400">
+                      Personal Gmail accounts only. Work or enterprise domains will be rejected.
+                    </p>
+                  )}
 
                   <Button
                     type="submit"
@@ -287,7 +313,9 @@ export const SocialAuthButtons = ({
                     className="w-full mt-1 text-xs"
                     isLoading={isSubmitting}
                   >
-                    Authorize via {activeModalProvider === 'google' ? 'Google' : 'Microsoft'}
+                    {activeModalProvider === 'google'
+                      ? 'Sign In with Personal Gmail'
+                      : 'Authorize via Microsoft'}
                   </Button>
                 </form>
               </div>

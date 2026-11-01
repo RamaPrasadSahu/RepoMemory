@@ -526,6 +526,15 @@ export const googleLogin = asyncHandler(async (req, res) => {
   }
 
   const normalizedEmail = profile.email.toLowerCase().trim();
+
+  // Strictly enforce personal Gmail accounts and reject any work/enterprise domains
+  if (!normalizedEmail.endsWith("@gmail.com") && !normalizedEmail.endsWith("@googlemail.com")) {
+    throw new ApiError(
+      400,
+      "Google login is strictly restricted to personal Gmail accounts (@gmail.com). Work or enterprise emails are not permitted."
+    );
+  }
+
   const userName = profile.name?.trim() || normalizedEmail.split("@")[0];
   const userAvatar =
     profile.avatar ||

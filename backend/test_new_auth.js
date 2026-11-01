@@ -110,21 +110,32 @@ async function runTests() {
     }
     console.log("   PASSED: Successfully authenticated with newly reset password!");
 
-    console.log("\n=== 8. Testing Google Login ===");
+    console.log("\n=== 8. Testing Google Login (Strict Personal Gmail Enforcement) ===");
+    const workEmailRes = await client.post("/auth/google", {
+      email: "engineer@corporate-work.io",
+      name: "Corporate User",
+      googleId: "g_corp_12345",
+    });
+    console.log("   Work email rejection status:", workEmailRes.status, "(Expected: 400)");
+    if (workEmailRes.status !== 400) {
+      throw new Error("Expected corporate work email to be rejected with 400");
+    }
+    console.log("   PASSED: Work email rejected for Google login!");
+
     const googleRes = await client.post("/auth/google", {
       email: "google.engineer@gmail.com",
       name: "Google Engineer",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb",
       googleId: "g_sub_1234567890",
     });
-    console.log("   Google login status:", googleRes.status);
+    console.log("   Personal Gmail login status:", googleRes.status, "(Expected: 200)");
     console.log("   Provider:", googleRes.data?.data?.user?.authProvider || "google");
     console.log("   Role:", googleRes.data?.data?.user?.role);
     console.log("   Token received:", !!googleRes.data?.data?.token);
     if (googleRes.status !== 200 || !googleRes.data?.data?.token) {
-      throw new Error(`Google login failed: ${JSON.stringify(googleRes.data)}`);
+      throw new Error(`Personal Gmail login failed: ${JSON.stringify(googleRes.data)}`);
     }
-    console.log("   PASSED: Google login authenticated developer successfully!");
+    console.log("   PASSED: Personal Gmail (@gmail.com) login authenticated successfully!");
 
     console.log("\n=== 9. Testing Microsoft Login ===");
     const msRes = await client.post("/auth/microsoft", {

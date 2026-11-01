@@ -100,7 +100,7 @@ export const RegisterPage = () => {
 
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1">
-                Work Email address
+                Email address
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
@@ -108,7 +108,7 @@ export const RegisterPage = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="developer@acme.com"
+                  placeholder="developer@example.com"
                   className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-700/80 rounded-lg text-sm text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                 />
               </div>

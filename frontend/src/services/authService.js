@@ -298,8 +298,15 @@ export const authService = {
   async loginWithGoogle(payload) {
     if (config.isMockMode) {
       await new Promise((resolve) => setTimeout(resolve, 350));
-      const email = payload.email || 'developer.google@repomemory.io';
+      const email = payload.email || 'developer.personal@gmail.com';
       const normalizedEmail = email.toLowerCase().trim();
+
+      if (!normalizedEmail.endsWith('@gmail.com') && !normalizedEmail.endsWith('@googlemail.com')) {
+        throw new Error(
+          'Google login is restricted to personal Gmail accounts (@gmail.com). Work or enterprise emails are not permitted.'
+        );
+      }
+
       const name = payload.name || 'Google Developer';
       const avatar =
         payload.avatar ||
