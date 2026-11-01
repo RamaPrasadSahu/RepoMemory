@@ -228,15 +228,25 @@ export const authService = {
 
       const normalized = email.toLowerCase().trim();
       const users = getMockUsersDB();
-      const user = users.find((u) => u.email?.toLowerCase() === normalized);
+      let user = users.find((u) => u.email?.toLowerCase() === normalized);
 
       const mockToken = `mock_reset_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-      if (user) {
-        user.resetPasswordToken = mockToken;
-        user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
-        saveMockUsersDB(users);
+      if (!user) {
+        user = {
+          id: `usr_${Date.now()}`,
+          name: normalized.split('@')[0],
+          email: normalized,
+          password: 'TemporaryPassword123!',
+          role: 'developer',
+          createdAt: new Date().toISOString(),
+        };
+        users.push(user);
       }
+
+      user.resetPasswordToken = mockToken;
+      user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+      saveMockUsersDB(users);
 
       return {
         success: true,
