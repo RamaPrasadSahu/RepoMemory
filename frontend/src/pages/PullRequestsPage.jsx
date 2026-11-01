@@ -18,6 +18,7 @@ import Modal from '../components/common/Modal';
 import LoadingState from '../components/common/LoadingState';
 import ErrorState from '../components/common/ErrorState';
 import EmptyState from '../components/common/EmptyState';
+import AnalyzeGithubModal from '../components/common/AnalyzeGithubModal';
 
 export const PullRequestsPage = () => {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export const PullRequestsPage = () => {
 
   // New Analysis Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAnalyzeGithubModalOpen, setIsAnalyzeGithubModalOpen] = useState(false);
   const [targetPr, setTargetPr] = useState(null);
   const [baseBranch, setBaseBranch] = useState('main');
   const [headBranch, setHeadBranch] = useState('');
@@ -123,6 +125,15 @@ export const PullRequestsPage = () => {
             Select a pull request to calculate change impact, downstream ripple, and test recommendations.
           </p>
         </div>
+
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => setIsAnalyzeGithubModalOpen(true)}
+          leftIcon={<Sparkles className="w-4 h-4 text-amber-300" />}
+        >
+          Analyze Any GitHub PR
+        </Button>
       </div>
 
       {/* Filter and Search Bar */}
@@ -263,6 +274,13 @@ export const PullRequestsPage = () => {
           </p>
         </form>
       </Modal>
+
+      {/* Direct GitHub PR Analysis Modal */}
+      <AnalyzeGithubModal
+        isOpen={isAnalyzeGithubModalOpen}
+        onClose={() => setIsAnalyzeGithubModalOpen(false)}
+        onSuccess={loadData}
+      />
     </div>
   );
 };

@@ -43,7 +43,16 @@ export const historyService = {
     }
 
     const res = await apiClient.get('/analyses', { params });
-    return res.data || res;
+    const data = res.data || res;
+    return {
+      items: data.items || data.analyses || (Array.isArray(data) ? data : []),
+      pagination: data.pagination || {
+        page: data.page || 1,
+        limit: data.limit || 10,
+        total: data.total || (data.analyses ? data.analyses.length : 0),
+        totalPages: data.totalPages || 1,
+      },
+    };
   },
 };
 

@@ -4,6 +4,9 @@ import {
   getRepositoryById,
   connectRepository,
   disconnectRepository,
+  verifyGithubAccount,
+  getGithubRepositories,
+  analyzeGithubPullRequest,
 } from "../controllers/repository.controller.js";
 import { getPullRequests } from "../controllers/pullRequest.controller.js";
 import {
@@ -25,6 +28,12 @@ router.use(verifyJWT);
 // Base Repository Endpoints
 router.route("/").get(getAllRepositories);
 router.route("/connect").post(connectRepository);
+
+// GitHub Specific Integration Endpoints (Placed before /:repositoryId wildcard)
+router.route("/github/verify-token").post(verifyGithubAccount);
+router.route("/github/user-repos").get(getGithubRepositories);
+router.route("/github/analyze-pr").post(analyzeGithubPullRequest);
+
 router.route("/:repositoryId")
   .get(getRepositoryById)
   .delete(disconnectRepository);

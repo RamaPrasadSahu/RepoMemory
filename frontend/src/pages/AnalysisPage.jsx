@@ -16,6 +16,7 @@ import {
   Layers,
   CheckCircle2,
   Info,
+  Maximize,
 } from 'lucide-react';
 import useAnalysis from '../hooks/useAnalysis';
 import DependencyGraph from '../components/graph/DependencyGraph';
@@ -50,6 +51,7 @@ export const AnalysisPage = () => {
   // Active views and right-panel tabs
   const [activeWorkspaceTab, setActiveWorkspaceTab] = useState('graph'); // 'graph' | 'changed'
   const [activeInspectorTab, setActiveInspectorTab] = useState('selected'); // 'selected' | 'affected' | 'tests' | 'evidence'
+  const [isGraphFullscreen, setIsGraphFullscreen] = useState(false);
 
   if (isLoading) {
     return (
@@ -160,7 +162,7 @@ export const AnalysisPage = () => {
         {/* Left / Center Main Canvas Area (7 or 8 columns) */}
         <div className="xl:col-span-8 space-y-4">
           {/* Main Canvas Tab Controls */}
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -188,6 +190,18 @@ export const AnalysisPage = () => {
                 <span>Changed Files in PR ({analysis.changedFiles?.length || 0})</span>
               </button>
             </div>
+
+            {activeWorkspaceTab === 'graph' && (
+              <button
+                type="button"
+                onClick={() => setIsGraphFullscreen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600/10 hover:bg-brand-600/20 text-brand-300 border border-brand-500/30 transition-all hover:scale-[1.02] shadow-sm"
+                title="Open Max Full Screen View (Press F or Esc to exit)"
+              >
+                <Maximize className="w-3.5 h-3.5 text-brand-400" />
+                <span>Max Full Screen</span>
+              </button>
+            )}
           </div>
 
           {/* Main Content: Graph or Changed Files list */}
@@ -199,6 +213,12 @@ export const AnalysisPage = () => {
                 setActiveInspectorTab('selected');
               }}
               selectedNodeId={selectedNodeData?.id || selectedNodeData?.path}
+              pullRequestTitle={analysis.pullRequestTitle}
+              repositoryName={analysis.repositoryName}
+              riskLevel={analysis.riskLevel}
+              prNumber={analysis.pullRequestNumber}
+              isMaxFullscreen={isGraphFullscreen}
+              onFullscreenChange={setIsGraphFullscreen}
             />
           ) : (
             /* Changed Files List View */

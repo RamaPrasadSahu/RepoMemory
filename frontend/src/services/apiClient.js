@@ -30,12 +30,16 @@ export const getAuthToken = () => {
   return localStorage.getItem(TOKEN_KEY);
 };
 
-// Request interceptor: injects Bearer token if present
+// Request interceptor: injects Bearer token and optional GitHub PAT if present
 apiClient.interceptors.request.use(
   (reqConfig) => {
     const token = getAuthToken();
     if (token && reqConfig.headers) {
       reqConfig.headers.Authorization = `Bearer ${token}`;
+    }
+    const ghToken = localStorage.getItem('repomemory_github_pat');
+    if (ghToken && reqConfig.headers && !reqConfig.headers['x-github-token']) {
+      reqConfig.headers['x-github-token'] = ghToken;
     }
     return reqConfig;
   },

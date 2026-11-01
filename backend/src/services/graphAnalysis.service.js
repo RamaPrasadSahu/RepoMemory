@@ -175,15 +175,22 @@ export const graphAnalysisService = {
   /**
    * Generate prioritized test suites from affected files.
    */
-  generateTestRecommendations(changedFiles, affectedFiles, allNodes) {
+  generateTestRecommendations(changedFiles = [], affectedFiles = [], allNodes = []) {
     const tests = [];
-    const allPaths = [...changedFiles, ...affectedFiles.map((a) => a.path)];
+    const safeAffected = Array.isArray(affectedFiles)
+      ? affectedFiles.map((a) => (typeof a === "string" ? a : a?.path || "")).filter(Boolean)
+      : [];
+    const safeChanged = Array.isArray(changedFiles)
+      ? changedFiles.map((c) => (typeof c === "string" ? c : c?.path || "")).filter(Boolean)
+      : [];
+    const safeNodes = Array.isArray(allNodes) ? allNodes : [];
+    const allPaths = [...safeChanged, ...safeAffected];
 
     allPaths.forEach((p) => {
       const baseName = p.split("/").pop().replace(/\.(js|ts|jsx|tsx)$/, "");
       // Look for corresponding test file
-      const matchingTest = allNodes.find(
-        (n) => n.path && n.path.includes(baseName) && (n.path.includes(".test.") || n.path.includes(".spec."))
+      const matchingTest = safeNodes.find(
+        (n) => n?.path && n.path.includes(baseName) && (n.path.includes(".test.") || n.path.includes(".spec."))
       );
 
       if (matchingTest && !tests.some((t) => t.testFile === matchingTest.path)) {

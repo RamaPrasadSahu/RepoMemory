@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FolderGit2,
   GitPullRequest,
@@ -10,6 +10,7 @@ import {
   Activity,
   Layers,
   Plus,
+  Github,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -23,19 +24,23 @@ import {
 import repositoryService from '../services/repositoryService';
 import pullRequestService from '../services/pullRequestService';
 import historyService from '../services/historyService';
+import analysisService from '../services/analysisService';
 import RepositoryCard from '../components/dashboard/RepositoryCard';
 import PullRequestCard from '../components/dashboard/PullRequestCard';
 import ActivityList from '../components/dashboard/ActivityList';
 import Button from '../components/common/Button';
 import LoadingState from '../components/common/LoadingState';
 import ErrorState from '../components/common/ErrorState';
+import AnalyzeGithubModal from '../components/common/AnalyzeGithubModal';
 
 export const DashboardPage = () => {
+  const navigate = useNavigate();
   const [repositories, setRepositories] = useState([]);
   const [pullRequests, setPullRequests] = useState([]);
   const [activities, setActivities] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isAnalyzeModalOpen, setIsAnalyzeModalOpen] = useState(false);
 
   const loadDashboardData = async () => {
     setIsLoading(true);
@@ -60,6 +65,18 @@ export const DashboardPage = () => {
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  const handleAnalyzePr = async (pr) => {
+    try {
+      const res = await analysisService.startAnalysis(pr.id, {
+        baseBranch: pr.targetBranch,
+        headBranch: pr.sourceBranch,
+      });
+      navigate(`/analysis/${res.id || res.analysisId || 'analysis_101'}`);
+    } catch (err) {
+      alert(err.message || 'Failed to start analysis.');
+    }
+  };
 
   if (isLoading) {
     return <LoadingState message="Loading engineering workspace..." />;
@@ -96,6 +113,14 @@ export const DashboardPage = () => {
         </div>
 
         <div className="flex items-center gap-2.5">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setIsAnalyzeModalOpen(true)}
+            leftIcon={<Github className="w-3.5 h-3.5" />}
+          >
+            Analyze GitHub PR
+          </Button>
           <Link to="/repositories">
             <Button variant="secondary" size="sm" leftIcon={<FolderGit2 className="w-3.5 h-3.5" />}>
               Repositories
@@ -288,10 +313,17 @@ export const DashboardPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {pullRequests.slice(0, 3).map((pr) => (
-            <PullRequestCard key={pr.id} pullRequest={pr} />
+            <PullRequestCard key={pr.id} pullRequest={pr} onAnalyze={handleAnalyzePr} />
           ))}
         </div>
       </div>
+
+      {/* Quick Analyze GitHub Modal */}
+      <AnalyzeGithubModal
+        isOpen={isAnalyzeModalOpen}
+        onClose={() => setIsAnalyzeModalOpen(false)}
+        onSuccess={loadDashboardData}
+      />
     </div>
   );
 };

@@ -34,3 +34,80 @@ export const safeResolvePath = (baseDir, relativePath) => {
   }
   return resolved;
 };
+
+/**
+ * Universal GitHub URL and reference parser.
+ * Supports:
+ * - "owner/repo" (e.g. facebook/react)
+ * - "owner/repo#123" (e.g. facebook/react#38088)
+ * - "https://github.com/owner/repo"
+ * - "https://github.com/owner/repo/pull/123"
+ * - "git@github.com:owner/repo.git"
+ */
+export const parseGithubUrl = (input) => {
+  if (typeof input !== "string" || !input.trim()) {
+    return { isValid: false, owner: null, repo: null, fullName: null, prNumber: null };
+  }
+
+  const cleaned = input.trim();
+
+  // Pattern 1: https://github.com/owner/repo/pull/123
+  const prRegex = /(?:https?:\/\/)?(?:www\.)?github\.com\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)\/pull\/(\d+)/i;
+  const prMatch = cleaned.match(prRegex);
+  if (prMatch) {
+    const owner = prMatch[1];
+    const repo = prMatch[2].replace(/\.git$/i, "");
+    const prNumber = parseInt(prMatch[3], 10);
+    return {
+      isValid: true,
+      owner,
+      repo,
+      fullName: `${owner}/${repo}`,
+      prNumber,
+    };
+  }
+
+  // Pattern 2: https://github.com/owner/repo (with optional trailing slash or .git)
+  const repoUrlRegex = /(?:https?:\/\/)?(?:www\.)?github\.com\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+?)(?:\.git|\/)?$/i;
+  const repoMatch = cleaned.match(repoUrlRegex);
+  if (repoMatch) {
+    const owner = repoMatch[1];
+    const repo = repoMatch[2];
+    return {
+      isValid: true,
+      owner,
+      repo,
+      fullName: `${owner}/${repo}`,
+      prNumber: null,
+    };
+  }
+
+  // Pattern 3: owner/repo#123
+  const refPrMatch = cleaned.match(/^([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)#(\d+)$/);
+  if (refPrMatch) {
+    const owner = refPrMatch[1];
+    const repo = refPrMatch[2];
+    const prNumber = parseInt(refPrMatch[3], 10);
+    return {
+      isValid: true,
+      owner,
+      repo,
+      fullName: `${owner}/${repo}`,
+      prNumber,
+    };
+  }
+
+  // Pattern 4: owner/repo
+  if (isValidRepoFullName(cleaned)) {
+    const [owner, repo] = cleaned.split("/");
+    return {
+      isValid: true,
+      owner,
+      repo,
+      fullName: `${owner}/${repo}`,
+      prNumber: null,
+    };
+  }
+
+  return { isValid: false, owner: null, repo: null, fullName: null, prNumber: null };
+};

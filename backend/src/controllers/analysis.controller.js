@@ -233,6 +233,31 @@ import mongoose from "mongoose";
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
+// Global in-memory cache for dynamic GitHub and custom repository analyses
+export const inMemoryAnalyses = new Map();
+
+/**
+ * Persist an analysis to in-memory store and MongoDB if available.
+ */
+export const saveAnalysisToStore = async (analysisData) => {
+  if (!analysisData) return null;
+  const id = analysisData.id || analysisData.analysisId;
+  inMemoryAnalyses.set(id, analysisData);
+
+  if (isDbConnected()) {
+    try {
+      await Analysis.findOneAndUpdate(
+        { analysisId: id },
+        { $set: analysisData },
+        { upsert: true, new: true }
+      );
+    } catch (err) {
+      console.warn(`[Analysis Store] Could not write to MongoDB: ${err.message}`);
+    }
+  }
+  return analysisData;
+};
+
 /**
  * Get full analysis report by ID.
  */
@@ -249,10 +274,21 @@ export const getAnalysisById = asyncHandler(async (req, res) => {
   }
 
   if (!analysis) {
+    analysis = inMemoryAnalyses.get(analysisId);
+  }
+
+  if (!analysis) {
     analysis = defaultAnalysisDetails;
   }
 
-  return res.status(200).json(new ApiResponse(200, analysis, "Analysis report retrieved"));
+  const obj = analysis?.toObject ? analysis.toObject() : analysis;
+  const formatted = {
+    ...obj,
+    id: obj.analysisId || obj.id,
+    analysisId: obj.analysisId || obj.id,
+  };
+
+  return res.status(200).json(new ApiResponse(200, formatted, "Analysis report retrieved"));
 });
 
 /**
@@ -262,10 +298,16 @@ export const getAnalysisGraph = asyncHandler(async (req, res) => {
   const { analysisId } = req.params;
 
   let analysis = null;
-  try {
-    analysis = await Analysis.findOne({ analysisId });
-  } catch {
-    // handled below
+  if (isDbConnected()) {
+    try {
+      analysis = await Analysis.findOne({ analysisId });
+    } catch {
+      // handled below
+    }
+  }
+
+  if (!analysis) {
+    analysis = inMemoryAnalyses.get(analysisId);
   }
 
   const graph = analysis?.graph || defaultAnalysisDetails.graph;
@@ -279,10 +321,16 @@ export const getAffectedFiles = asyncHandler(async (req, res) => {
   const { analysisId } = req.params;
 
   let analysis = null;
-  try {
-    analysis = await Analysis.findOne({ analysisId });
-  } catch {
-    // handled below
+  if (isDbConnected()) {
+    try {
+      analysis = await Analysis.findOne({ analysisId });
+    } catch {
+      // handled below
+    }
+  }
+
+  if (!analysis) {
+    analysis = inMemoryAnalyses.get(analysisId);
   }
 
   const affectedFiles = analysis?.affectedFiles || defaultAnalysisDetails.affectedFiles;
@@ -296,10 +344,16 @@ export const getTestRecommendations = asyncHandler(async (req, res) => {
   const { analysisId } = req.params;
 
   let analysis = null;
-  try {
-    analysis = await Analysis.findOne({ analysisId });
-  } catch {
-    // handled below
+  if (isDbConnected()) {
+    try {
+      analysis = await Analysis.findOne({ analysisId });
+    } catch {
+      // handled below
+    }
+  }
+
+  if (!analysis) {
+    analysis = inMemoryAnalyses.get(analysisId);
   }
 
   const testRecommendations = analysis?.testRecommendations || defaultAnalysisDetails.testRecommendations;
@@ -357,7 +411,32 @@ export const getAnalysisHistory = asyncHandler(async (req, res) => {
     },
   ];
 
-  let filtered = [...historyList];
+  let dbAnalyses = [];
+  if (isDbConnected()) {
+    try {
+      dbAnalyses = await Analysis.find({}).sort({ createdAt: -1 }).limit(50);
+    } catch {
+      dbAnalyses = [];
+    }
+  }
+
+  // Combine dynamic in-memory analyses, DB records, and static seed runs
+  const combined = [
+    ...Array.from(inMemoryAnalyses.values()),
+    ...dbAnalyses.map((a) => a.toObject ? a.toObject() : a),
+    ...historyList,
+  ];
+
+  // Deduplicate by analysisId
+  const uniqueMap = new Map();
+  combined.forEach((item) => {
+    const key = item.analysisId || item.id;
+    if (key && !uniqueMap.has(key)) {
+      uniqueMap.set(key, item);
+    }
+  });
+
+  let filtered = Array.from(uniqueMap.values());
   if (repositoryId && repositoryId !== "all") {
     filtered = filtered.filter((h) => h.repositoryId === repositoryId);
   }
@@ -365,11 +444,22 @@ export const getAnalysisHistory = asyncHandler(async (req, res) => {
     filtered = filtered.filter((h) => h.riskLevel === risk);
   }
 
+  const pagedItems = filtered.slice((page - 1) * limit, page * limit);
+  const totalPages = Math.ceil(filtered.length / limit) || 1;
+
   const paginated = {
-    analyses: filtered.slice((page - 1) * limit, page * limit),
+    items: pagedItems,
+    analyses: pagedItems,
     total: filtered.length,
     page,
-    totalPages: Math.ceil(filtered.length / limit) || 1,
+    limit,
+    totalPages,
+    pagination: {
+      page,
+      limit,
+      total: filtered.length,
+      totalPages,
+    },
   };
 
   return res.status(200).json(new ApiResponse(200, paginated, "Analysis history fetched"));

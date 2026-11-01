@@ -322,6 +322,7 @@ export const RepositoryDetailPage = () => {
               rawGraph={graphData}
               onNodeSelect={(node) => setSelectedNode(node)}
               selectedNodeId={selectedNode?.id || selectedNode?.path}
+              repositoryName={repository?.name || repository?.fullName}
             />
           </div>
 

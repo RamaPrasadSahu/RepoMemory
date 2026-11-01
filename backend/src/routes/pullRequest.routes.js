@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  getPullRequests,
   getPullRequestById,
   getPullRequestAnalysis,
   startPullRequestAnalysis,
@@ -11,6 +12,7 @@ const router = Router();
 // Enforce cryptographic JWT authentication on all pull request routes
 router.use(verifyJWT);
 
+router.route("/").get(getPullRequests);
 router.route("/:pullRequestId").get(getPullRequestById);
 router.route("/:pullRequestId/analysis").get(getPullRequestAnalysis);
 router.route("/:pullRequestId/analyze").post(startPullRequestAnalysis);
