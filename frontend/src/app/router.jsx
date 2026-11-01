@@ -8,6 +8,8 @@ import LoadingState from '../components/common/LoadingState';
 const LandingPage = lazy(() => import('../pages/LandingPage'));
 const LoginPage = lazy(() => import('../pages/LoginPage'));
 const RegisterPage = lazy(() => import('../pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('../pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
 const DashboardPage = lazy(() => import('../pages/DashboardPage'));
 const RepositoriesPage = lazy(() => import('../pages/RepositoriesPage'));
 const RepositoryDetailPage = lazy(() => import('../pages/RepositoryDetailPage'));
@@ -55,6 +57,22 @@ export const router = createBrowserRouter([
     element: (
       <SuspenseWrapper>
         <RegisterPage />
+      </SuspenseWrapper>
+    ),
+  },
+  {
+    path: '/forgot-password',
+    element: (
+      <SuspenseWrapper>
+        <ForgotPasswordPage />
+      </SuspenseWrapper>
+    ),
+  },
+  {
+    path: '/reset-password',
+    element: (
+      <SuspenseWrapper>
+        <ResetPasswordPage />
       </SuspenseWrapper>
     ),
   },

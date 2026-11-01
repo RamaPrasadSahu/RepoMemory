@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Layers, Eye, EyeOff, Lock, Mail, ArrowRight, Sparkles } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Button from '../components/common/Button';
+import SocialAuthButtons from '../components/common/SocialAuthButtons';
 
 export const LoginPage = () => {
   const { login, loginAsDemo, isLoading, error: authError } = useAuth();
@@ -55,7 +56,7 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 selection:bg-brand-500 selection:text-white">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <Link to="/" className="inline-flex items-center gap-2.5 group">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-indigo-700 flex items-center justify-center text-white shadow-glow-brand group-hover:scale-105 transition-transform">
@@ -76,8 +77,16 @@ export const LoginPage = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-slate-900 py-8 px-6 shadow-2xl rounded-2xl border border-slate-800 sm:px-10">
+          {/* Social Single Sign-On (Google & Microsoft) */}
+          <div className="mb-4">
+            <SocialAuthButtons
+              redirectTo={from}
+              dividerText="or continue with"
+            />
+          </div>
+
           {/* Quick Demo Sign In Button */}
-          <div className="mb-6">
+          <div className="mb-5">
             <Button
               type="button"
               variant="secondary"
@@ -94,7 +103,7 @@ export const LoginPage = () => {
                 <div className="w-full border-t border-slate-800" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-slate-900 px-2 text-slate-400">or use email</span>
+                <span className="bg-slate-900 px-2 text-slate-400">or use email credentials</span>
               </div>
             </div>
           </div>
@@ -123,7 +132,15 @@ export const LoginPage = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Password</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-slate-300">Password</label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-brand-400 hover:text-brand-300 font-medium transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
                 <input

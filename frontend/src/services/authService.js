@@ -215,6 +215,205 @@ export const authService = {
     }
     return { success: true };
   },
+
+  /**
+   * Request password reset instructions.
+   */
+  async forgotPassword(email) {
+    if (config.isMockMode) {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      if (!email || !email.includes('@')) {
+        throw new Error('Please enter a valid email address.');
+      }
+
+      const normalized = email.toLowerCase().trim();
+      const users = getMockUsersDB();
+      const user = users.find((u) => u.email?.toLowerCase() === normalized);
+
+      const mockToken = `mock_reset_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+      if (user) {
+        user.resetPasswordToken = mockToken;
+        user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+        saveMockUsersDB(users);
+      }
+
+      return {
+        success: true,
+        message: 'If an account with that email exists, password reset instructions have been sent.',
+        resetToken: mockToken,
+        resetUrl: `/reset-password?token=${mockToken}`,
+      };
+    }
+
+    const res = await apiClient.post('/auth/forgot-password', { email });
+    return res.data || res;
+  },
+
+  /**
+   * Complete password reset using reset token and new password.
+   */
+  async resetPassword({ token, newPassword }) {
+    if (config.isMockMode) {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      if (!token) {
+        throw new Error('Password reset token is required.');
+      }
+      if (!newPassword || newPassword.length < 8) {
+        throw new Error('Password must be at least 8 characters long.');
+      }
+
+      const users = getMockUsersDB();
+      const user = users.find(
+        (u) =>
+          u.resetPasswordToken === token &&
+          (!u.resetPasswordExpires || u.resetPasswordExpires > Date.now())
+      );
+
+      // In mock mode, if testing with generic token allow reset on the demo account as well
+      const targetUser = user || users.find((u) => u.email === DEFAULT_DEMO_USER.email);
+
+      if (!targetUser) {
+        throw new Error('Password reset token is invalid or has expired.');
+      }
+
+      targetUser.password = newPassword;
+      delete targetUser.resetPasswordToken;
+      delete targetUser.resetPasswordExpires;
+      saveMockUsersDB(users);
+
+      return {
+        success: true,
+        message: 'Password has been reset successfully. You can now log in with your new password.',
+      };
+    }
+
+    const res = await apiClient.post('/auth/reset-password', { token, newPassword });
+    return res.data || res;
+  },
+
+  /**
+   * Authenticate or register using Google OAuth.
+   */
+  async loginWithGoogle(payload) {
+    if (config.isMockMode) {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      const email = payload.email || 'developer.google@repomemory.io';
+      const normalizedEmail = email.toLowerCase().trim();
+      const name = payload.name || 'Google Developer';
+      const avatar =
+        payload.avatar ||
+        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&h=120&fit=crop&crop=faces';
+      const googleId = payload.googleId || `g_${Date.now()}`;
+
+      const users = getMockUsersDB();
+      let account = users.find(
+        (u) => u.googleId === googleId || u.email?.toLowerCase() === normalizedEmail
+      );
+
+      if (account) {
+        account.googleId = googleId;
+        account.authProvider = 'google';
+        if (avatar) account.avatar = avatar;
+      } else {
+        account = {
+          id: `usr_g_${Date.now()}`,
+          name,
+          email: normalizedEmail,
+          googleId,
+          authProvider: 'google',
+          role: 'developer',
+          avatar,
+          githubConnected: false,
+          createdAt: new Date().toISOString(),
+        };
+        users.push(account);
+      }
+      saveMockUsersDB(users);
+
+      const sessionUser = {
+        id: account.id,
+        name: account.name,
+        email: account.email,
+        role: account.role || 'developer',
+        avatar: account.avatar,
+        authProvider: 'google',
+        githubConnected: !!account.githubConnected,
+      };
+
+      localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(sessionUser));
+      const mockToken = `mock_google_jwt_${account.id}`;
+      setAuthToken(mockToken);
+      return { success: true, user: sessionUser, token: mockToken };
+    }
+
+    const res = await apiClient.post('/auth/google', payload);
+    const data = res.data || res;
+    if (data.token) setAuthToken(data.token);
+    return data;
+  },
+
+  /**
+   * Authenticate or register using Microsoft OAuth.
+   */
+  async loginWithMicrosoft(payload) {
+    if (config.isMockMode) {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      const email = payload.email || 'developer.msft@repomemory.io';
+      const normalizedEmail = email.toLowerCase().trim();
+      const name = payload.name || 'Microsoft Developer';
+      const avatar =
+        payload.avatar ||
+        'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=120&h=120&fit=crop&crop=faces';
+      const microsoftId = payload.microsoftId || `ms_${Date.now()}`;
+
+      const users = getMockUsersDB();
+      let account = users.find(
+        (u) => u.microsoftId === microsoftId || u.email?.toLowerCase() === normalizedEmail
+      );
+
+      if (account) {
+        account.microsoftId = microsoftId;
+        account.authProvider = 'microsoft';
+        if (avatar) account.avatar = avatar;
+      } else {
+        account = {
+          id: `usr_ms_${Date.now()}`,
+          name,
+          email: normalizedEmail,
+          microsoftId,
+          authProvider: 'microsoft',
+          role: 'developer',
+          avatar,
+          githubConnected: false,
+          createdAt: new Date().toISOString(),
+        };
+        users.push(account);
+      }
+      saveMockUsersDB(users);
+
+      const sessionUser = {
+        id: account.id,
+        name: account.name,
+        email: account.email,
+        role: account.role || 'developer',
+        avatar: account.avatar,
+        authProvider: 'microsoft',
+        githubConnected: !!account.githubConnected,
+      };
+
+      localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(sessionUser));
+      const mockToken = `mock_ms_jwt_${account.id}`;
+      setAuthToken(mockToken);
+      return { success: true, user: sessionUser, token: mockToken };
+    }
+
+    const res = await apiClient.post('/auth/microsoft', payload);
+    const data = res.data || res;
+    if (data.token) setAuthToken(data.token);
+    return data;
+  },
 };
 
 export default authService;
+

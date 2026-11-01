@@ -18,8 +18,31 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
+      required: function () {
+        return this.authProvider === "local" || !this.authProvider;
+      },
       minlength: [8, "Password must be at least 8 characters long"],
+    },
+    authProvider: {
+      type: String,
+      enum: ["local", "google", "microsoft"],
+      default: "local",
+    },
+    googleId: {
+      type: String,
+      default: null,
+    },
+    microsoftId: {
+      type: String,
+      default: null,
+    },
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
     },
     role: {
       type: String,
@@ -42,13 +65,14 @@ const userSchema = new mongoose.Schema(
 
 // Hash password before save
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.password || !this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
 // Compare password securely
 userSchema.methods.isPasswordCorrect = async function (candidatePassword) {
+  if (!this.password) return false;
   return await bcrypt.compare(candidatePassword, this.password);
 };
 

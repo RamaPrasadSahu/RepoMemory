@@ -89,6 +89,48 @@ export const AuthProvider = ({ children }) => {
     return login('developer@example.com', 'demo-developer-mode');
   };
 
+  const loginWithGoogle = async (payload) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await authService.loginWithGoogle(payload);
+      const loggedInUser = res.user || res.data?.user || res;
+      setUser(loggedInUser);
+      return loggedInUser;
+    } catch (err) {
+      const msg = err.message || 'Google sign in failed.';
+      setError(msg);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithMicrosoft = async (payload) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await authService.loginWithMicrosoft(payload);
+      const loggedInUser = res.user || res.data?.user || res;
+      setUser(loggedInUser);
+      return loggedInUser;
+    } catch (err) {
+      const msg = err.message || 'Microsoft sign in failed.';
+      setError(msg);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const forgotPassword = async (email) => {
+    return authService.forgotPassword(email);
+  };
+
+  const resetPassword = async (payload) => {
+    return authService.resetPassword(payload);
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
@@ -98,6 +140,10 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     loginAsDemo,
+    loginWithGoogle,
+    loginWithMicrosoft,
+    forgotPassword,
+    resetPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

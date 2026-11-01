@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Layers, Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Button from '../components/common/Button';
+import SocialAuthButtons from '../components/common/SocialAuthButtons';
 
 export const RegisterPage = () => {
   const { register, isLoading, error: authError } = useAuth();
@@ -46,7 +47,7 @@ export const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 selection:bg-brand-500 selection:text-white">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <Link to="/" className="inline-flex items-center gap-2.5 group">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-indigo-700 flex items-center justify-center text-white shadow-glow-brand group-hover:scale-105 transition-transform">
@@ -67,6 +68,15 @@ export const RegisterPage = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-slate-900 py-8 px-6 shadow-2xl rounded-2xl border border-slate-800 sm:px-10">
+          {/* Social Single Sign-On (Google & Microsoft) */}
+          <div className="mb-4">
+            <SocialAuthButtons
+              isRegister={true}
+              redirectTo="/dashboard"
+              dividerText="or register with email"
+            />
+          </div>
+
           {(localError || authError) && (
             <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-400">
               {localError || authError}
